@@ -1,0 +1,165 @@
+@import url('https://fonts.googleapis.com/css2?family=Cabinet+Grotesk:wght@400;500;700&family=Fraunces:wght@400;600;700&family=Noto+Sans+Devanagari:wght@400;500;700&family=Noto+Sans+Gurmukhi:wght@400;500;700&family=Noto+Sans+Tamil:wght@400;500;700&family=Noto+Sans+Telugu:wght@400;500;700&family=Noto+Sans+Bengali:wght@400;500;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Organic border radii - soft, nature-inspired */
+    --radius: 1.5rem;
+    --radius-lg: 2rem;
+    --radius-xl: 2.5rem;
+    
+    /* Light mode: Warm cream and natural tones */
+    --background: 0.98 0.02 75; /* warm cream */
+    --foreground: 0.25 0.03 45; /* deep soil brown */
+    
+    --card: 0.99 0.015 70; /* soft white with warmth */
+    --card-foreground: 0.28 0.035 40;
+    
+    --popover: 0.99 0.015 70;
+    --popover-foreground: 0.28 0.035 40;
+    
+    /* Primary: Fresh leafy green */
+    --primary: 0.55 0.14 150; /* vibrant green */
+    --primary-foreground: 0.99 0.01 150;
+    
+    /* Secondary: Sky blue for trust */
+    --secondary: 0.75 0.09 220; /* soft sky blue */
+    --secondary-foreground: 0.25 0.03 220;
+    
+    /* Muted: Light earth tones */
+    --muted: 0.92 0.02 60;
+    --muted-foreground: 0.48 0.03 50;
+    
+    /* Accent: Sunrise yellow/gold */
+    --accent: 0.80 0.12 85; /* warm golden */
+    --accent-foreground: 0.30 0.04 75;
+    
+    --destructive: 0.55 0.20 25; /* natural rust red */
+    --destructive-foreground: 0.99 0.01 25;
+    
+    --border: 0.88 0.02 65;
+    --input: 0.95 0.02 70;
+    --ring: 0.55 0.14 150;
+    
+    /* Success: Growing green */
+    --success: 0.60 0.16 145;
+    --success-foreground: 0.99 0.01 145;
+    
+    /* Chart colors: Nature palette */
+    --chart-1: 0.55 0.14 150; /* leaf green */
+    --chart-2: 0.75 0.09 220; /* sky blue */
+    --chart-3: 0.80 0.12 85; /* sunshine yellow */
+    --chart-4: 0.65 0.10 30; /* earthy orange */
+    --chart-5: 0.48 0.08 320; /* berry purple */
+    
+    --sidebar: 0.97 0.02 70;
+    --sidebar-foreground: 0.28 0.035 40;
+    --sidebar-primary: 0.55 0.14 150;
+    --sidebar-primary-foreground: 0.99 0.01 150;
+    --sidebar-accent: 0.92 0.02 60;
+    --sidebar-accent-foreground: 0.28 0.035 40;
+    --sidebar-border: 0.88 0.02 65;
+    --sidebar-ring: 0.55 0.14 150;
+  }
+
+  .dark {
+    /* Dark mode: Deep earth tones with bioluminescent accents */
+    --background: 0.18 0.03 140; /* deep forest green-black */
+    --foreground: 0.95 0.02 120; /* soft moonlight */
+    
+    --card: 0.22 0.04 145; /* darker organic card */
+    --card-foreground: 0.95 0.02 120;
+    
+    --popover: 0.24 0.04 145;
+    --popover-foreground: 0.95 0.02 120;
+    
+    /* Primary: Bioluminescent green glow */
+    --primary: 0.70 0.18 155; /* bright living green */
+    --primary-foreground: 0.18 0.03 155;
+    
+    /* Secondary: Night sky blue */
+    --secondary: 0.45 0.10 230;
+    --secondary-foreground: 0.95 0.02 230;
+    
+    --muted: 0.28 0.04 140;
+    --muted-foreground: 0.68 0.03 130;
+    
+    /* Accent: Firefly golden glow */
+    --accent: 0.75 0.15 80;
+    --accent-foreground: 0.20 0.03 80;
+    
+    --destructive: 0.60 0.22 20;
+    --destructive-foreground: 0.95 0.02 20;
+    
+    --border: 0.32 0.04 145;
+    --input: 0.26 0.04 145;
+    --ring: 0.70 0.18 155;
+    
+    --success: 0.70 0.18 155;
+    --success-foreground: 0.18 0.03 155;
+    
+    --chart-1: 0.70 0.18 155;
+    --chart-2: 0.65 0.12 230;
+    --chart-3: 0.75 0.15 80;
+    --chart-4: 0.68 0.12 35;
+    --chart-5: 0.62 0.14 310;
+    
+    --sidebar: 0.20 0.03 145;
+    --sidebar-foreground: 0.95 0.02 120;
+    --sidebar-primary: 0.70 0.18 155;
+    --sidebar-primary-foreground: 0.18 0.03 155;
+    --sidebar-accent: 0.28 0.04 140;
+    --sidebar-accent-foreground: 0.95 0.02 120;
+    --sidebar-border: 0.32 0.04 145;
+    --sidebar-ring: 0.70 0.18 155;
+  }
+
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Outfit', 'Noto Sans Devanagari', 'Noto Sans Gurmukhi', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Bengali', system-ui, sans-serif;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Fraunces', 'Noto Sans Devanagari', 'Noto Sans Gurmukhi', 'Noto Sans Tamil', 'Noto Sans Telugu', 'Noto Sans Bengali', Georgia, serif;
+  }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  /* Custom animations */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-20px);
+    }
+  }
+  
+  @keyframes shimmer {
+    0% {
+      background-position: -1000px 0;
+    }
+    100% {
+      background-position: 1000px 0;
+    }
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  /* Organic shapes */
+  .blob-shape {
+    border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+  }
+}
