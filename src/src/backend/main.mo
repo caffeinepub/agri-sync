@@ -11,10 +11,13 @@ import Blob "mo:core/Blob";
 import List "mo:core/List";
 import Option "mo:core/Option";
 import Principal "mo:core/Principal";
+
 import MixinAuthorization "authorization/MixinAuthorization";
 import MixinStorage "blob-storage/Mixin";
 import ExternalBlob "blob-storage/Storage";
 import AccessControl "authorization/access-control";
+
+// Migration via with-clause
 
 actor {
   // Mixins
@@ -37,6 +40,18 @@ actor {
     location : Text;
     role : UserRole;
     createdAt : Time.Time;
+    suspended : Bool;
+  };
+
+  public type UserStats = {
+    productsListed : Nat;
+    ordersMade : Nat;
+    ordersReceived : Nat;
+  };
+
+  public type UserWithStats = {
+    profile : UserProfile;
+    stats : UserStats;
   };
 
   // Product Types
@@ -68,6 +83,8 @@ actor {
     imageBlob : ?ExternalBlob.ExternalBlob;
     createdAt : Time.Time;
     available : Bool;
+    moderated : Bool;
+    moderationNote : ?Text;
   };
 
   // Order Types
@@ -104,6 +121,12 @@ actor {
     totalProducts : Nat;
     totalOrders : Nat;
     totalRevenue : Float;
+    totalSuspendedUsers : Nat;
+  };
+
+  public type RecentActivity = {
+    recentProducts : [Product];
+    recentOrders : [Order];
   };
 
   // Storage
@@ -157,7 +180,7 @@ actor {
   func calculateTotalAmount(items : [OrderItem]) : Float {
     var total : Float = 0;
     for (item in items.values()) {
-      total += item.price * item.quantity.toFloat(); // Inline float conversion
+      total += item.price * item.quantity.toFloat();
     };
     total;
   };
@@ -200,6 +223,7 @@ actor {
       location;
       role;
       createdAt = Time.now();
+      suspended = false;
     };
 
     userProfiles.add(caller, profile);
@@ -213,12 +237,145 @@ actor {
     userProfiles.get(caller);
   };
 
-  // Admin: Get all users
-  public query ({ caller }) func getAllUsers() : async [UserProfile] {
+  // Admin: Get all users with stats
+  func computeUserStats(user : Principal) : UserStats {
+    // Count products listed by user
+    let productsListed = products.values().foldLeft(
+      0,
+      func(count, product) {
+        if (product.farmer == user) { count + 1 } else { count };
+      },
+    );
+
+    // Count orders placed by user (as buyer)
+    let ordersMade = orders.values().foldLeft(
+      0,
+      func(count, order) {
+        if (order.buyer == user) { count + 1 } else { count };
+      },
+    );
+
+    // Count orders received by user (as farmer)
+    let ordersReceived = orders.values().foldLeft(
+      0,
+      func(count, order) {
+        if (order.farmer == user) { count + 1 } else { count };
+      },
+    );
+
+    {
+      productsListed;
+      ordersMade;
+      ordersReceived;
+    };
+  };
+
+  public query ({ caller }) func getAllUsersWithStats() : async [UserWithStats] {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can view all users");
     };
-    userProfiles.values().toArray();
+
+    userProfiles.entries().map(
+      func((user, profile)) {
+        {
+          profile;
+          stats = computeUserStats(user); // Compute stats using helper
+        };
+      }
+    ).toArray();
+  };
+
+  public query ({ caller }) func getUserStats(user : Principal) : async UserStats {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view user stats");
+    };
+    computeUserStats(user);
+  };
+
+  public shared ({ caller }) func setUserRoleProfile(user : Principal, role : UserRole) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can update user roles");
+    };
+
+    switch (userProfiles.get(user)) {
+      case (null) { Runtime.trap("User does not exist") };
+      case (?profile) {
+        let updatedProfile = {
+          profile with
+          role;
+        };
+        userProfiles.add(user, updatedProfile);
+      };
+    };
+  };
+
+  public shared ({ caller }) func setSuspendedProfile(user : Principal, suspended : Bool) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can suspend or activate users");
+    };
+
+    switch (userProfiles.get(user)) {
+      case (null) { Runtime.trap("User does not exist") };
+      case (?profile) {
+        let updatedProfile = {
+          profile with
+          suspended;
+        };
+        userProfiles.add(user, updatedProfile);
+      };
+    };
+  };
+
+  // Get all suspended users
+  public query ({ caller }) func getAllSuspendedUsers() : async [UserProfile] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view suspended users");
+    };
+
+    let suspended = userProfiles.values().filter(
+      func(profile) {
+        profile.suspended;
+      }
+    );
+    suspended.toArray();
+  };
+
+  // Get active users (not suspended)
+  public query ({ caller }) func getAllActiveUsers() : async [UserProfile] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view active users");
+    };
+
+    let active = userProfiles.values().filter(
+      func(profile) {
+        not profile.suspended;
+      }
+    );
+    active.toArray();
+  };
+
+  public query ({ caller }) func getTotalSuspendedUsers() : async Nat {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view total suspended users");
+    };
+
+    var count = 0;
+    for (profile in userProfiles.values()) {
+      if (profile.suspended) { count += 1 };
+    };
+    count;
+  };
+
+  public query ({ caller }) func getTotalActiveUsers() : async Nat {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view total active users");
+    };
+
+    var count = 0;
+    for (profile in userProfiles.values()) {
+      if (not profile.suspended) { count += 1 };
+    };
+    count;
   };
 
   // Product Management
@@ -236,6 +393,10 @@ actor {
       Runtime.trap("Unauthorized: Only farmers can create products");
     };
 
+    if (farmerProfile.suspended) {
+      Runtime.trap("Unauthorized: Suspended users cannot create products");
+    };
+
     let product : Product = {
       id = nextProductId;
       name;
@@ -249,6 +410,8 @@ actor {
       imageBlob = image;
       createdAt = Time.now();
       available = quantity > 0;
+      moderated = false;
+      moderationNote = null;
     };
 
     products.add(nextProductId, product);
@@ -336,7 +499,7 @@ actor {
   };
 
   // Admin: Moderate products
-  public shared ({ caller }) func moderateProduct(productId : Nat, available : Bool) : async Product {
+  public shared ({ caller }) func moderateProduct(productId : Nat, available : Bool, moderationNote : ?Text) : async Product {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can moderate products");
     };
@@ -347,11 +510,36 @@ actor {
     };
 
     let updatedProduct = {
-      existingProduct with available;
+      existingProduct with
+      available;
+      moderated = true;
+      moderationNote;
     };
 
     products.add(productId, updatedProduct);
     updatedProduct;
+  };
+
+  // Bulk update product availability
+  public shared ({ caller }) func bulkUpdateProductAvailability(productIds : [Nat], available : Bool) : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can bulk update product availability");
+    };
+
+    for (productId in productIds.values()) {
+      switch (products.get(productId)) {
+        case (null) {};
+        case (?product) {
+          let updatedProduct = {
+            product with
+            available;
+            moderated = true;
+            moderationNote = null;
+          };
+          products.add(productId, updatedProduct);
+        };
+      };
+    };
   };
 
   // Order Management
@@ -367,6 +555,10 @@ actor {
 
     if (buyerProfile.role != #homeBuyer and buyerProfile.role != #businessBuyer) {
       Runtime.trap("Unauthorized: Only buyers can place orders");
+    };
+
+    if (buyerProfile.suspended) {
+      Runtime.trap("Unauthorized: Suspended users cannot place orders");
     };
 
     let totalAmount = calculateTotalAmount(items);
@@ -496,6 +688,7 @@ actor {
     var totalHomeBuyers = 0;
     var totalBusinessBuyers = 0;
     var totalRevenue : Float = 0;
+    var totalSuspendedUsers = 0;
 
     for (profile in userProfiles.values()) {
       switch (profile.role) {
@@ -504,6 +697,8 @@ actor {
         case (#businessBuyer) { totalBusinessBuyers += 1 };
         case (#admin) { };
       };
+
+      if (profile.suspended) { totalSuspendedUsers += 1 };
     };
 
     for (order in orders.values()) {
@@ -520,6 +715,30 @@ actor {
       totalProducts = products.size();
       totalOrders = orders.size();
       totalRevenue;
+      totalSuspendedUsers;
+    };
+  };
+
+  // Get recent activity (last 20 products and orders)
+  public query ({ caller }) func getRecentActivity() : async RecentActivity {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can view recent activity");
+    };
+
+    let recentProductsList = products.values().toArray();
+    let recentOrdersList = orders.values().toArray();
+
+    let recentProducts = if (recentProductsList.size() <= 20) { recentProductsList } else {
+      recentProductsList.sliceToArray(0, 20);
+    };
+
+    let recentOrders = if (recentOrdersList.size() <= 20) { recentOrdersList } else {
+      recentOrdersList.sliceToArray(0, 20);
+    };
+
+    {
+      recentProducts;
+      recentOrders;
     };
   };
 

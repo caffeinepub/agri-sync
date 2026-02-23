@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Plus, Edit, Trash2, Package } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { BackButton, ScrollToTopButton } from '../components/NavigationControls';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -44,6 +45,7 @@ export default function ProductListingPage({ navigate }: ProductListingPageProps
       <Header navigate={navigate} />
 
       <main className="flex-1 container mx-auto px-4 py-8">
+        <BackButton onClick={() => navigate('home')} label="Back to Home" className="mb-6" />
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
@@ -92,6 +94,7 @@ export default function ProductListingPage({ navigate }: ProductListingPageProps
       </main>
 
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 }

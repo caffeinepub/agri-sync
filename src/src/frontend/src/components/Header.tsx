@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { Sprout, ShoppingBasket, Package, User, LayoutDashboard, Sun, Moon, Menu, X } from 'lucide-react';
+import { Sprout, ShoppingBasket, Package, User, LayoutDashboard, Sun, Moon, Menu, X, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
 import { useGetCallerUserProfile, useIsCallerAdmin } from '../hooks/useQueries';
@@ -12,6 +12,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { useTranslation } from 'react-i18next';
 import LanguageSwitcher from './LanguageSwitcher';
+import { useAdminAuth } from '../hooks/useAdminAuth';
 
 interface HeaderProps {
   navigate: (page: any, params?: any) => void;
@@ -26,6 +27,7 @@ export default function Header({ navigate }: HeaderProps) {
   const { theme, setTheme } = useTheme();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const queryClient = useQueryClient();
+  const { isAuthenticated: isAdminAuthenticated, logout: adminLogout } = useAdminAuth();
 
   const isAuthenticated = !!identity;
   const cartCount = getTotalItems();
@@ -33,6 +35,12 @@ export default function Header({ navigate }: HeaderProps) {
   const handleLogout = async () => {
     await clear();
     queryClient.clear();
+    toast.success(t('messages.success.logout'));
+    navigate('home');
+  };
+
+  const handleAdminLogout = () => {
+    adminLogout();
     toast.success(t('messages.success.logout'));
     navigate('home');
   };
@@ -124,6 +132,28 @@ export default function Header({ navigate }: HeaderProps) {
                   >
                     <LayoutDashboard className="w-4 h-4 mr-2" />
                     {t('nav.admin')}
+                  </Button>
+                )}
+
+                {isAdminAuthenticated && (
+                  <Button
+                    variant="ghost"
+                    onClick={handleAdminLogout}
+                    className="text-foreground hover:text-primary"
+                  >
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    {t('admin.adminLogin')} - {t('nav.logout')}
+                  </Button>
+                )}
+
+                {!isAuthenticated && !isAdminAuthenticated && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate('adminLogin')}
+                    className="text-foreground hover:text-primary"
+                  >
+                    <ShieldCheck className="w-4 h-4 mr-2" />
+                    {t('admin.adminLogin')}
                   </Button>
                 )}
 

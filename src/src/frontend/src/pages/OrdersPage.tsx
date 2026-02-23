@@ -2,6 +2,7 @@ import { motion } from 'framer-motion';
 import { Package } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { BackButton, ScrollToTopButton } from '../components/NavigationControls';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -31,6 +32,7 @@ export default function OrdersPage({ navigate }: OrdersPageProps) {
       <Header navigate={navigate} />
 
       <main className="flex-1 container mx-auto px-4 py-8">
+        <BackButton onClick={() => navigate('home')} label="Back to Home" className="mb-6" />
         <h1 className="text-4xl font-display font-bold mb-8">
           {isFarmer ? 'Incoming Orders' : 'My Orders'}
         </h1>
@@ -62,6 +64,7 @@ export default function OrdersPage({ navigate }: OrdersPageProps) {
       </main>
 
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 }

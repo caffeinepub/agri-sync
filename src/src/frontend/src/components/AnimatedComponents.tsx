@@ -4,8 +4,9 @@ import { growFromBottom, scaleBounce, fadeIn } from '@/lib/animations';
 import { cn } from '@/lib/utils';
 
 // AnimatedCard - grows from bottom with organic feel
-interface AnimatedCardProps extends HTMLMotionProps<'div'> {
+interface AnimatedCardProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   delay?: number;
+  children?: React.ReactNode;
 }
 
 export function AnimatedCard({ children, className, delay = 0, ...props }: AnimatedCardProps) {
@@ -24,8 +25,9 @@ export function AnimatedCard({ children, className, delay = 0, ...props }: Anima
 }
 
 // GrowingButton - bounces on interaction
-interface GrowingButtonProps extends HTMLMotionProps<'button'> {
+interface GrowingButtonProps extends Omit<HTMLMotionProps<'button'>, 'children'> {
   variant?: 'default' | 'primary' | 'secondary' | 'ghost';
+  children?: React.ReactNode;
 }
 
 export function GrowingButton({
@@ -56,9 +58,10 @@ export function GrowingButton({
 }
 
 // FloatingElement - gentle floating animation
-interface FloatingElementProps extends HTMLMotionProps<'div'> {
+interface FloatingElementProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   duration?: number;
   yOffset?: number;
+  children?: React.ReactNode;
 }
 
 export function FloatingElement({
@@ -183,8 +186,9 @@ export function SeedGrowthLoader({ className }: { className?: string }) {
 }
 
 // OrganicContainer - rounded, soft container with entrance animation
-interface OrganicContainerProps extends HTMLMotionProps<'div'> {
+interface OrganicContainerProps extends Omit<HTMLMotionProps<'div'>, 'children'> {
   delay?: number;
+  children?: React.ReactNode;
 }
 
 export function OrganicContainer({ children, className, delay = 0, ...props }: OrganicContainerProps) {

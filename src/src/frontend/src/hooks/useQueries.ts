@@ -57,7 +57,10 @@ export function useGetAllUsers() {
     queryKey: ['allUsers'],
     queryFn: async () => {
       if (!actor) return [];
-      return actor.getAllUsers();
+      // Use getAllActiveUsers as the backend doesn't have getAllUsers
+      const activeUsers = await actor.getAllActiveUsers();
+      const suspendedUsers = await actor.getAllSuspendedUsers();
+      return [...activeUsers, ...suspendedUsers];
     },
     enabled: !!actor && !isFetching,
   });
@@ -314,6 +317,135 @@ export function useIsCallerAdmin() {
     queryFn: async () => {
       if (!actor) return false;
       return actor.isCallerAdmin();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+// ===== Admin Mutations =====
+
+export function useGetAllUsersWithStats() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['allUsersWithStats'],
+    queryFn: async () => {
+      if (!actor) return [];
+      return actor.getAllUsersWithStats();
+    },
+    enabled: !!actor && !isFetching,
+  });
+}
+
+export function useGetUserStats(userPrincipal: Principal | null) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['userStats', userPrincipal?.toString()],
+    queryFn: async () => {
+      if (!actor || !userPrincipal) return null;
+      return actor.getUserStats(userPrincipal);
+    },
+    enabled: !!actor && !isFetching && userPrincipal !== null,
+  });
+}
+
+export function useSetUserRole() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userPrincipal, role }: { userPrincipal: Principal; role: any }) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.setUserRoleProfile(userPrincipal, role);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsersWithStats'] });
+    },
+  });
+}
+
+export function useSetSuspendedProfile() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ userPrincipal, suspended }: { userPrincipal: Principal; suspended: boolean }) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.setSuspendedProfile(userPrincipal, suspended);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsersWithStats'] });
+      queryClient.invalidateQueries({ queryKey: ['platformAnalytics'] });
+    },
+  });
+}
+
+export function useDeleteUserAccount() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (userPrincipal: Principal) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.deleteUserAccount(userPrincipal);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['allUsers'] });
+      queryClient.invalidateQueries({ queryKey: ['allUsersWithStats'] });
+      queryClient.invalidateQueries({ queryKey: ['platformAnalytics'] });
+    },
+  });
+}
+
+export function useModerateProduct() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      productId,
+      available,
+      moderationNote,
+    }: {
+      productId: bigint;
+      available: boolean;
+      moderationNote: string | null;
+    }) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.moderateProduct(productId, available, moderationNote);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
+export function useBulkUpdateProductAvailability() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ productIds, available }: { productIds: bigint[]; available: boolean }) => {
+      if (!actor) throw new Error('Actor not available');
+      await actor.bulkUpdateProductAvailability(productIds, available);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
+export function useGetRecentActivity() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery({
+    queryKey: ['recentActivity'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getRecentActivity();
     },
     enabled: !!actor && !isFetching,
   });

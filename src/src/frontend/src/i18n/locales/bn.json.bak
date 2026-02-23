@@ -163,10 +163,7 @@
     "noUsers": "কোন ব্যবহারকারী পাওয়া যায়নি",
     "noProducts": "কোন পণ্য পাওয়া যায়নি",
     "noOrders": "কোন অর্ডার পাওয়া যায়নি",
-    "backToDashboard": "ড্যাশবোর্ডে ফিরে যান",
-    "discounts": "Discounts",
-    "restrictions": "Restrictions",
-    "activityLog": "Activity Log"
+    "backToDashboard": "ড্যাশবোর্ডে ফিরে যান"
   },
   "listing": {
     "title": "আমার পণ্যসমূহ",
@@ -267,61 +264,6 @@
     "confirm": "নিশ্চিত করুন",
     "viewMore": "আরো দেখুন",
     "viewLess": "কম দেখুন",
-    "rupees": "₹",
-    "backToHome": "Back to Home"
-  },
-  "navigation": {
-    "back": "Back",
-    "forward": "Forward",
-    "scrollToTop": "Scroll to Top"
-  },
-  "suggestions": {
-    "recommendedForYou": "Recommended for You",
-    "continueWhereYouLeftOff": "Continue Where You Left Off",
-    "youMightAlsoLike": "You Might Also Like",
-    "specialOffers": "Special Offers",
-    "basedOnYourLocation": "Popular in Your Area",
-    "trending": "Trending Now"
-  },
-  "discounts": {
-    "title": "Discounts & Offers",
-    "createDiscount": "Create Discount",
-    "editDiscount": "Edit Discount",
-    "discountName": "Discount Name",
-    "discountType": "Discount Type",
-    "percentage": "Percentage",
-    "fixedAmount": "Fixed Amount",
-    "discountValue": "Discount Value",
-    "minOrderAmount": "Minimum Order Amount",
-    "maxDiscountAmount": "Maximum Discount Amount",
-    "validFrom": "Valid From",
-    "validUntil": "Valid Until",
-    "activeDiscounts": "Active Discounts",
-    "expiredDiscounts": "Expired Discounts",
-    "discountCode": "Discount Code",
-    "applyDiscount": "Apply Discount",
-    "discountApplied": "Discount Applied",
-    "youSave": "You Save",
-    "off": "OFF",
-    "seasonal": "Seasonal Offer",
-    "bulkOrder": "Bulk Order Discount",
-    "firstTimeBuyer": "First Time Buyer"
-  },
-  "restrictions": {
-    "title": "Restrictions & Moderation",
-    "createRestriction": "Create Restriction",
-    "restrictionType": "Restriction Type",
-    "regionBased": "Region-Based",
-    "timeBased": "Time-Based",
-    "quantityBased": "Quantity-Based",
-    "categoryBased": "Category-Based",
-    "maxQuantity": "Maximum Quantity",
-    "restrictedRegions": "Restricted Regions",
-    "restrictedCategories": "Restricted Categories",
-    "activeRestrictions": "Active Restrictions",
-    "restrictionReason": "Reason",
-    "productRestricted": "This product has restrictions",
-    "notAvailableInRegion": "Not available in your region",
-    "quantityExceeded": "Quantity limit exceeded"
+    "rupees": "₹"
   }
 }

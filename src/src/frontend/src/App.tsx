@@ -18,9 +18,11 @@ import CartPage from './pages/CartPage';
 import OrdersPage from './pages/OrdersPage';
 import ProfilePage from './pages/ProfilePage';
 import AdminDashboard from './pages/AdminDashboard';
+import AdminLoginPage from './pages/AdminLoginPage';
+import { ScrollToTopButton } from './components/NavigationControls';
 
 // Simple router state
-type Page = 'onboarding' | 'home' | 'listing' | 'discovery' | 'detail' | 'cart' | 'orders' | 'profile' | 'admin';
+type Page = 'onboarding' | 'home' | 'listing' | 'discovery' | 'detail' | 'cart' | 'orders' | 'profile' | 'admin' | 'adminLogin';
 
 interface RouteState {
   page: Page;
@@ -33,6 +35,8 @@ function AppContent() {
   const { data: userProfile, isLoading: profileLoading, isFetched } = useGetCallerUserProfile();
   
   const [route, setRoute] = useState<RouteState>({ page: 'home' });
+  const [navigationHistory, setNavigationHistory] = useState<RouteState[]>([{ page: 'home' }]);
+  const [historyIndex, setHistoryIndex] = useState(0);
   const [hasSeenOnboarding, setHasSeenOnboarding] = useState(() => {
     return localStorage.getItem('hasSeenOnboarding') === 'true';
   });
@@ -42,11 +46,42 @@ function AppContent() {
   // Show profile setup modal
   const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
 
-  // Navigate function
+  // Navigate function with history tracking
   const navigate = (page: Page, params?: any) => {
-    setRoute({ page, params });
+    const newRoute = { page, params };
+    setRoute(newRoute);
+    
+    // Add to history
+    const newHistory = navigationHistory.slice(0, historyIndex + 1);
+    newHistory.push(newRoute);
+    setNavigationHistory(newHistory);
+    setHistoryIndex(newHistory.length - 1);
+    
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
+
+  // Back navigation
+  const navigateBack = () => {
+    if (historyIndex > 0) {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setRoute(navigationHistory[newIndex]);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  // Forward navigation
+  const navigateForward = () => {
+    if (historyIndex < navigationHistory.length - 1) {
+      const newIndex = historyIndex + 1;
+      setHistoryIndex(newIndex);
+      setRoute(navigationHistory[newIndex]);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const canGoBack = historyIndex > 0;
+  const canGoForward = historyIndex < navigationHistory.length - 1;
 
   // Show onboarding for first-time users
   useEffect(() => {
@@ -91,6 +126,8 @@ function AppContent() {
         return <OrdersPage navigate={navigate} />;
       case 'profile':
         return <ProfilePage navigate={navigate} />;
+      case 'adminLogin':
+        return <AdminLoginPage navigate={navigate} />;
       case 'admin':
         return <AdminDashboard navigate={navigate} />;
       default:
@@ -102,6 +139,7 @@ function AppContent() {
     <>
       {renderPage()}
       {showProfileSetup && <ProfileSetupModal />}
+      <ScrollToTopButton />
       <Toaster position="top-center" />
     </>
   );

@@ -163,10 +163,7 @@
     "noUsers": "ਕੋਈ ਉਪਭੋਗਤਾ ਨਹੀਂ ਮਿਲਿਆ",
     "noProducts": "ਕੋਈ ਉਤਪਾਦ ਨਹੀਂ ਮਿਲਿਆ",
     "noOrders": "ਕੋਈ ਆਰਡਰ ਨਹੀਂ ਮਿਲਿਆ",
-    "backToDashboard": "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਵਾਪਸ",
-    "discounts": "Discounts",
-    "restrictions": "Restrictions",
-    "activityLog": "Activity Log"
+    "backToDashboard": "ਡੈਸ਼ਬੋਰਡ 'ਤੇ ਵਾਪਸ"
   },
   "listing": {
     "title": "ਮੇਰੇ ਉਤਪਾਦ",
@@ -267,61 +264,6 @@
     "confirm": "ਪੁਸ਼ਟੀ ਕਰੋ",
     "viewMore": "ਹੋਰ ਦੇਖੋ",
     "viewLess": "ਘੱਟ ਦੇਖੋ",
-    "rupees": "₹",
-    "backToHome": "Back to Home"
-  },
-  "navigation": {
-    "back": "Back",
-    "forward": "Forward",
-    "scrollToTop": "Scroll to Top"
-  },
-  "suggestions": {
-    "recommendedForYou": "Recommended for You",
-    "continueWhereYouLeftOff": "Continue Where You Left Off",
-    "youMightAlsoLike": "You Might Also Like",
-    "specialOffers": "Special Offers",
-    "basedOnYourLocation": "Popular in Your Area",
-    "trending": "Trending Now"
-  },
-  "discounts": {
-    "title": "Discounts & Offers",
-    "createDiscount": "Create Discount",
-    "editDiscount": "Edit Discount",
-    "discountName": "Discount Name",
-    "discountType": "Discount Type",
-    "percentage": "Percentage",
-    "fixedAmount": "Fixed Amount",
-    "discountValue": "Discount Value",
-    "minOrderAmount": "Minimum Order Amount",
-    "maxDiscountAmount": "Maximum Discount Amount",
-    "validFrom": "Valid From",
-    "validUntil": "Valid Until",
-    "activeDiscounts": "Active Discounts",
-    "expiredDiscounts": "Expired Discounts",
-    "discountCode": "Discount Code",
-    "applyDiscount": "Apply Discount",
-    "discountApplied": "Discount Applied",
-    "youSave": "You Save",
-    "off": "OFF",
-    "seasonal": "Seasonal Offer",
-    "bulkOrder": "Bulk Order Discount",
-    "firstTimeBuyer": "First Time Buyer"
-  },
-  "restrictions": {
-    "title": "Restrictions & Moderation",
-    "createRestriction": "Create Restriction",
-    "restrictionType": "Restriction Type",
-    "regionBased": "Region-Based",
-    "timeBased": "Time-Based",
-    "quantityBased": "Quantity-Based",
-    "categoryBased": "Category-Based",
-    "maxQuantity": "Maximum Quantity",
-    "restrictedRegions": "Restricted Regions",
-    "restrictedCategories": "Restricted Categories",
-    "activeRestrictions": "Active Restrictions",
-    "restrictionReason": "Reason",
-    "productRestricted": "This product has restrictions",
-    "notAvailableInRegion": "Not available in your region",
-    "quantityExceeded": "Quantity limit exceeded"
+    "rupees": "₹"
   }
 }

@@ -1,16 +1,20 @@
 import { motion } from 'framer-motion';
-import { Search, Plus, Leaf, Milk, Package, Apple, Wheat, Sprout as SproutIcon } from 'lucide-react';
+import { Search, Plus, Leaf, Milk, Package, Apple, Wheat, Sprout as SproutIcon, Sparkles, Clock, Tag } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useInternetIdentity } from '../hooks/useInternetIdentity';
-import { useGetCallerUserProfile } from '../hooks/useQueries';
-import { UserRole, ProductCategory } from '../backend';
+import { useGetCallerUserProfile, useGetAllProducts } from '../hooks/useQueries';
+import { UserRole, ProductCategory, Product } from '../backend';
 import { AnimatedCard, FloatingElement, StaggeredList, StaggeredItem } from '../components/AnimatedComponents';
-import { CATEGORY_LABELS, CATEGORY_TRANSLATION_KEYS } from '@/lib/helpers';
-import { useState } from 'react';
+import { CATEGORY_LABELS, CATEGORY_TRANSLATION_KEYS, formatPrice } from '@/lib/helpers';
+import { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useProductSuggestions } from '../hooks/useProductSuggestions';
+import { useDiscounts } from '../hooks/useDiscounts';
 
 interface HomePageProps {
   navigate: (page: any, params?: any) => void;
@@ -20,11 +24,20 @@ export default function HomePage({ navigate }: HomePageProps) {
   const { t } = useTranslation();
   const { identity } = useInternetIdentity();
   const { data: userProfile } = useGetCallerUserProfile();
+  const { data: products = [] } = useGetAllProducts();
   const [searchQuery, setSearchQuery] = useState('');
 
   const isAuthenticated = !!identity;
   const isFarmer = userProfile?.role === UserRole.farmer;
   const isBuyer = userProfile?.role === UserRole.homeBuyer || userProfile?.role === UserRole.businessBuyer;
+
+  // Product suggestions
+  const { getLastViewedProducts, getRecommendedProducts, getSpecialOffers } = useProductSuggestions(products, userProfile?.location);
+  const { getDiscountForProduct } = useDiscounts();
+
+  const lastViewedProducts = getLastViewedProducts();
+  const recommendedProducts = getRecommendedProducts(6);
+  const specialOffers = getSpecialOffers(4);
 
   const categories = [
     { category: ProductCategory.fruits, icon: Apple, color: 'bg-red-500/10 text-red-600 dark:text-red-400' },
@@ -167,6 +180,75 @@ export default function HomePage({ navigate }: HomePageProps) {
           </StaggeredList>
         </section>
 
+        {/* Continue Where You Left Off (if has last viewed) */}
+        {isAuthenticated && lastViewedProducts.length > 0 && (
+          <section className="container mx-auto px-4 py-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex items-center gap-3 mb-8"
+            >
+              <Clock className="w-8 h-8 text-primary" />
+              <h2 className="text-3xl md:text-4xl font-display font-bold">{t('suggestions.continueWhereYouLeftOff')}</h2>
+            </motion.div>
+
+            <StaggeredList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {lastViewedProducts.map((product, index) => (
+                <StaggeredItem key={product.id.toString()}>
+                  <ProductSuggestionCard product={product} index={index} navigate={navigate} getDiscountForProduct={getDiscountForProduct} />
+                </StaggeredItem>
+              ))}
+            </StaggeredList>
+          </section>
+        )}
+
+        {/* Recommended for You */}
+        {isAuthenticated && recommendedProducts.length > 0 && (
+          <section className="container mx-auto px-4 py-16 bg-muted/20">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex items-center gap-3 mb-8"
+            >
+              <Sparkles className="w-8 h-8 text-accent" />
+              <h2 className="text-3xl md:text-4xl font-display font-bold">{t('suggestions.recommendedForYou')}</h2>
+            </motion.div>
+
+            <StaggeredList className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
+              {recommendedProducts.map((product, index) => (
+                <StaggeredItem key={product.id.toString()}>
+                  <ProductSuggestionCard product={product} index={index} navigate={navigate} getDiscountForProduct={getDiscountForProduct} />
+                </StaggeredItem>
+              ))}
+            </StaggeredList>
+          </section>
+        )}
+
+        {/* Special Offers */}
+        {specialOffers.length > 0 && (
+          <section className="container mx-auto px-4 py-16">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="flex items-center gap-3 mb-8"
+            >
+              <Tag className="w-8 h-8 text-secondary" />
+              <h2 className="text-3xl md:text-4xl font-display font-bold">{t('suggestions.specialOffers')}</h2>
+            </motion.div>
+
+            <StaggeredList className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {specialOffers.map((product, index) => (
+                <StaggeredItem key={product.id.toString()}>
+                  <ProductSuggestionCard product={product} index={index} navigate={navigate} getDiscountForProduct={getDiscountForProduct} />
+                </StaggeredItem>
+              ))}
+            </StaggeredList>
+          </section>
+        )}
+
         {/* Features Section */}
         <section className="bg-muted/30 py-16">
           <div className="container mx-auto px-4">
@@ -243,5 +325,69 @@ function OrganicFeatureCard({ icon, title, description }: { icon: string; title:
       <h3 className="text-2xl font-bold mb-3 text-foreground">{title}</h3>
       <p className="text-muted-foreground leading-relaxed">{description}</p>
     </motion.div>
+  );
+}
+
+function ProductSuggestionCard({
+  product,
+  index,
+  navigate,
+  getDiscountForProduct,
+}: {
+  product: Product;
+  index: number;
+  navigate: any;
+  getDiscountForProduct: (product: Product) => any;
+}) {
+  const { t } = useTranslation();
+  const [imageUrl, setImageUrl] = useState('');
+  const discount = getDiscountForProduct(product);
+
+  useEffect(() => {
+    if (product.imageBlob) {
+      setImageUrl(product.imageBlob.getDirectURL());
+    }
+  }, [product.imageBlob]);
+
+  return (
+    <AnimatedCard
+      delay={index * 0.05}
+      whileHover={{ scale: 1.05, y: -5 }}
+      onClick={() => navigate('detail', { productId: product.id })}
+    >
+      <Card className="cursor-pointer overflow-hidden hover:shadow-xl transition-shadow relative">
+        {discount && (
+          <div className="absolute top-2 left-2 z-10">
+            <Badge className="bg-destructive text-destructive-foreground font-bold">
+              {discount.isPercentage ? `${discount.value}% ${t('discounts.off')}` : `₹${discount.value} ${t('discounts.off')}`}
+            </Badge>
+          </div>
+        )}
+
+        {imageUrl ? (
+          <div className="relative h-40 bg-muted overflow-hidden">
+            <img src={imageUrl} alt={product.name} className="w-full h-full object-cover" />
+            {product.organic && (
+              <Badge className="absolute top-2 right-2 bg-success text-success-foreground">
+                🌱
+              </Badge>
+            )}
+          </div>
+        ) : (
+          <div className="h-40 bg-gradient-to-br from-primary/20 to-secondary/20" />
+        )}
+
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base line-clamp-1">{product.name}</CardTitle>
+        </CardHeader>
+
+        <CardContent className="pt-0">
+          <p className="text-xl font-bold text-primary">{formatPrice(product.price)}</p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {product.quantity.toString()} {product.unit} available
+          </p>
+        </CardContent>
+      </Card>
+    </AnimatedCard>
   );
 }

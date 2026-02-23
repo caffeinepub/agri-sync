@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ShoppingBasket, Trash2, Minus, Plus, ArrowRight } from 'lucide-react';
 import Header from '../components/Header';
 import Footer from '../components/Footer';
+import { BackButton, ScrollToTopButton } from '../components/NavigationControls';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useCart } from '../contexts/CartContext';
@@ -16,8 +17,12 @@ interface CartPageProps {
 }
 
 export default function CartPage({ navigate }: CartPageProps) {
-  const { items, removeItem, updateQuantity, clearCart, getTotalPrice } = useCart();
+  const { items, removeItem, updateQuantity, clearCart, getSubtotal, getDiscount, getFinalTotal } = useCart();
   const placeOrder = usePlaceOrder();
+
+  const subtotal = getSubtotal();
+  const discount = getDiscount();
+  const finalTotal = getFinalTotal();
 
   const handleCheckout = async () => {
     if (items.length === 0) return;
@@ -78,6 +83,7 @@ export default function CartPage({ navigate }: CartPageProps) {
       <Header navigate={navigate} />
 
       <main className="flex-1 container mx-auto px-4 py-8">
+        <BackButton onClick={() => navigate('discovery')} label="Continue Shopping" className="mb-6" />
         <h1 className="text-4xl font-display font-bold mb-8">Your Cart</h1>
 
         <div className="grid lg:grid-cols-3 gap-8">
@@ -101,15 +107,27 @@ export default function CartPage({ navigate }: CartPageProps) {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
-                  <span className="font-medium">{formatPrice(getTotalPrice())}</span>
+                  <span className="font-medium">{formatPrice(subtotal)}</span>
                 </div>
+                {discount && (
+                  <>
+                    <div className="flex justify-between text-success">
+                      <span>Discount ({discount.name})</span>
+                      <span className="font-bold">-{formatPrice(discount.amount)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-success font-medium">You Save</span>
+                      <span className="text-success font-bold">{formatPrice(discount.amount)}</span>
+                    </div>
+                  </>
+                )}
                 <div className="flex justify-between text-sm text-muted-foreground">
                   <span>Delivery</span>
                   <span>Calculated at checkout</span>
                 </div>
                 <div className="border-t pt-3 flex justify-between text-lg font-bold">
                   <span>Total</span>
-                  <span className="text-primary">{formatPrice(getTotalPrice())}</span>
+                  <span className="text-primary">{formatPrice(finalTotal)}</span>
                 </div>
               </div>
               <Button
@@ -126,6 +144,7 @@ export default function CartPage({ navigate }: CartPageProps) {
       </main>
 
       <Footer />
+      <ScrollToTopButton />
     </div>
   );
 }

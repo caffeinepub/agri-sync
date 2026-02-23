@@ -41,6 +41,8 @@ export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const Time = IDL.Int;
 export const Product = IDL.Record({
   'id' : IDL.Nat,
+  'moderationNote' : IDL.Opt(IDL.Text),
+  'moderated' : IDL.Bool,
   'imageBlob' : IDL.Opt(ExternalBlob),
   'organic' : IDL.Bool,
   'name' : IDL.Text,
@@ -64,6 +66,7 @@ export const UserProfile = IDL.Record({
   'name' : IDL.Text,
   'createdAt' : Time,
   'role' : UserRole,
+  'suspended' : IDL.Bool,
   'location' : IDL.Text,
 });
 export const OrderStatus = IDL.Variant({
@@ -87,14 +90,28 @@ export const Order = IDL.Record({
   'items' : IDL.Vec(OrderItem),
   'farmer' : IDL.Principal,
 });
+export const UserStats = IDL.Record({
+  'ordersMade' : IDL.Nat,
+  'ordersReceived' : IDL.Nat,
+  'productsListed' : IDL.Nat,
+});
+export const UserWithStats = IDL.Record({
+  'stats' : UserStats,
+  'profile' : UserProfile,
+});
 export const PlatformAnalytics = IDL.Record({
   'totalProducts' : IDL.Nat,
   'totalOrders' : IDL.Nat,
   'totalHomeBuyers' : IDL.Nat,
+  'totalSuspendedUsers' : IDL.Nat,
   'totalBusinessBuyers' : IDL.Nat,
   'totalUsers' : IDL.Nat,
   'totalRevenue' : IDL.Float64,
   'totalFarmers' : IDL.Nat,
+});
+export const RecentActivity = IDL.Record({
+  'recentProducts' : IDL.Vec(Product),
+  'recentOrders' : IDL.Vec(Order),
 });
 
 export const idlService = IDL.Service({
@@ -126,6 +143,11 @@ export const idlService = IDL.Service({
   '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
+  'bulkUpdateProductAvailability' : IDL.Func(
+      [IDL.Vec(IDL.Nat), IDL.Bool],
+      [],
+      [],
+    ),
   'createProduct' : IDL.Func(
       [
         IDL.Text,
@@ -147,9 +169,11 @@ export const idlService = IDL.Service({
     ),
   'deleteProduct' : IDL.Func([IDL.Nat], [Product], []),
   'deleteUserAccount' : IDL.Func([IDL.Principal], [], []),
+  'getAllActiveUsers' : IDL.Func([], [IDL.Vec(UserProfile)], ['query']),
   'getAllOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
   'getAllProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
-  'getAllUsers' : IDL.Func([], [IDL.Vec(UserProfile)], ['query']),
+  'getAllSuspendedUsers' : IDL.Func([], [IDL.Vec(UserProfile)], ['query']),
+  'getAllUsersWithStats' : IDL.Func([], [IDL.Vec(UserWithStats)], ['query']),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
   'getFarmerOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
@@ -167,12 +191,22 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+  'getRecentActivity' : IDL.Func([], [RecentActivity], ['query']),
+  'getTotalActiveUsers' : IDL.Func([], [IDL.Nat], ['query']),
+  'getTotalSuspendedUsers' : IDL.Func([], [IDL.Nat], ['query']),
   'getUserOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
   'getUserProfile' : IDL.Func([IDL.Principal], [UserProfile], ['query']),
+  'getUserStats' : IDL.Func([IDL.Principal], [UserStats], ['query']),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'moderateProduct' : IDL.Func([IDL.Nat, IDL.Bool], [Product], []),
+  'moderateProduct' : IDL.Func(
+      [IDL.Nat, IDL.Bool, IDL.Opt(IDL.Text)],
+      [Product],
+      [],
+    ),
   'placeOrder' : IDL.Func([IDL.Vec(OrderItem), IDL.Principal], [Order], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'setSuspendedProfile' : IDL.Func([IDL.Principal, IDL.Bool], [], []),
+  'setUserRoleProfile' : IDL.Func([IDL.Principal, UserRole], [], []),
   'updateOrderStatus' : IDL.Func([IDL.Nat, OrderStatus], [], []),
   'updateProduct' : IDL.Func(
       [
@@ -227,6 +261,8 @@ export const idlFactory = ({ IDL }) => {
   const Time = IDL.Int;
   const Product = IDL.Record({
     'id' : IDL.Nat,
+    'moderationNote' : IDL.Opt(IDL.Text),
+    'moderated' : IDL.Bool,
     'imageBlob' : IDL.Opt(ExternalBlob),
     'organic' : IDL.Bool,
     'name' : IDL.Text,
@@ -250,6 +286,7 @@ export const idlFactory = ({ IDL }) => {
     'name' : IDL.Text,
     'createdAt' : Time,
     'role' : UserRole,
+    'suspended' : IDL.Bool,
     'location' : IDL.Text,
   });
   const OrderStatus = IDL.Variant({
@@ -273,14 +310,28 @@ export const idlFactory = ({ IDL }) => {
     'items' : IDL.Vec(OrderItem),
     'farmer' : IDL.Principal,
   });
+  const UserStats = IDL.Record({
+    'ordersMade' : IDL.Nat,
+    'ordersReceived' : IDL.Nat,
+    'productsListed' : IDL.Nat,
+  });
+  const UserWithStats = IDL.Record({
+    'stats' : UserStats,
+    'profile' : UserProfile,
+  });
   const PlatformAnalytics = IDL.Record({
     'totalProducts' : IDL.Nat,
     'totalOrders' : IDL.Nat,
     'totalHomeBuyers' : IDL.Nat,
+    'totalSuspendedUsers' : IDL.Nat,
     'totalBusinessBuyers' : IDL.Nat,
     'totalUsers' : IDL.Nat,
     'totalRevenue' : IDL.Float64,
     'totalFarmers' : IDL.Nat,
+  });
+  const RecentActivity = IDL.Record({
+    'recentProducts' : IDL.Vec(Product),
+    'recentOrders' : IDL.Vec(Order),
   });
   
   return IDL.Service({
@@ -312,6 +363,11 @@ export const idlFactory = ({ IDL }) => {
     '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole__1], [], []),
+    'bulkUpdateProductAvailability' : IDL.Func(
+        [IDL.Vec(IDL.Nat), IDL.Bool],
+        [],
+        [],
+      ),
     'createProduct' : IDL.Func(
         [
           IDL.Text,
@@ -333,9 +389,11 @@ export const idlFactory = ({ IDL }) => {
       ),
     'deleteProduct' : IDL.Func([IDL.Nat], [Product], []),
     'deleteUserAccount' : IDL.Func([IDL.Principal], [], []),
+    'getAllActiveUsers' : IDL.Func([], [IDL.Vec(UserProfile)], ['query']),
     'getAllOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
     'getAllProducts' : IDL.Func([], [IDL.Vec(Product)], ['query']),
-    'getAllUsers' : IDL.Func([], [IDL.Vec(UserProfile)], ['query']),
+    'getAllSuspendedUsers' : IDL.Func([], [IDL.Vec(UserProfile)], ['query']),
+    'getAllUsersWithStats' : IDL.Func([], [IDL.Vec(UserWithStats)], ['query']),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole__1], ['query']),
     'getFarmerOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
@@ -353,12 +411,22 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
+    'getRecentActivity' : IDL.Func([], [RecentActivity], ['query']),
+    'getTotalActiveUsers' : IDL.Func([], [IDL.Nat], ['query']),
+    'getTotalSuspendedUsers' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserOrders' : IDL.Func([], [IDL.Vec(Order)], ['query']),
     'getUserProfile' : IDL.Func([IDL.Principal], [UserProfile], ['query']),
+    'getUserStats' : IDL.Func([IDL.Principal], [UserStats], ['query']),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'moderateProduct' : IDL.Func([IDL.Nat, IDL.Bool], [Product], []),
+    'moderateProduct' : IDL.Func(
+        [IDL.Nat, IDL.Bool, IDL.Opt(IDL.Text)],
+        [Product],
+        [],
+      ),
     'placeOrder' : IDL.Func([IDL.Vec(OrderItem), IDL.Principal], [Order], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'setSuspendedProfile' : IDL.Func([IDL.Principal, IDL.Bool], [], []),
+    'setUserRoleProfile' : IDL.Func([IDL.Principal, UserRole], [], []),
     'updateOrderStatus' : IDL.Func([IDL.Nat, OrderStatus], [], []),
     'updateProduct' : IDL.Func(
         [

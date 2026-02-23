@@ -34,6 +34,7 @@ export interface PlatformAnalytics {
   'totalProducts' : bigint,
   'totalOrders' : bigint,
   'totalHomeBuyers' : bigint,
+  'totalSuspendedUsers' : bigint,
   'totalBusinessBuyers' : bigint,
   'totalUsers' : bigint,
   'totalRevenue' : number,
@@ -41,6 +42,8 @@ export interface PlatformAnalytics {
 }
 export interface Product {
   'id' : bigint,
+  'moderationNote' : [] | [string],
+  'moderated' : boolean,
   'imageBlob' : [] | [ExternalBlob],
   'organic' : boolean,
   'name' : string,
@@ -62,12 +65,17 @@ export type ProductCategory = { 'grains' : null } |
 export type ProductUnit = { 'kg' : null } |
   { 'pieces' : null } |
   { 'liters' : null };
+export interface RecentActivity {
+  'recentProducts' : Array<Product>,
+  'recentOrders' : Array<Order>,
+}
 export type Time = bigint;
 export interface UserProfile {
   'contact' : string,
   'name' : string,
   'createdAt' : Time,
   'role' : UserRole,
+  'suspended' : boolean,
   'location' : string,
 }
 export type UserRole = { 'admin' : null } |
@@ -77,6 +85,12 @@ export type UserRole = { 'admin' : null } |
 export type UserRole__1 = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface UserStats {
+  'ordersMade' : bigint,
+  'ordersReceived' : bigint,
+  'productsListed' : bigint,
+}
+export interface UserWithStats { 'stats' : UserStats, 'profile' : UserProfile }
 export interface _CaffeineStorageCreateCertificateResult {
   'method' : string,
   'blob_hash' : string,
@@ -106,6 +120,10 @@ export interface _SERVICE {
   '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole__1], undefined>,
+  'bulkUpdateProductAvailability' : ActorMethod<
+    [Array<bigint>, boolean],
+    undefined
+  >,
   'createProduct' : ActorMethod<
     [
       string,
@@ -125,9 +143,11 @@ export interface _SERVICE {
   >,
   'deleteProduct' : ActorMethod<[bigint], Product>,
   'deleteUserAccount' : ActorMethod<[Principal], undefined>,
+  'getAllActiveUsers' : ActorMethod<[], Array<UserProfile>>,
   'getAllOrders' : ActorMethod<[], Array<Order>>,
   'getAllProducts' : ActorMethod<[], Array<Product>>,
-  'getAllUsers' : ActorMethod<[], Array<UserProfile>>,
+  'getAllSuspendedUsers' : ActorMethod<[], Array<UserProfile>>,
+  'getAllUsersWithStats' : ActorMethod<[], Array<UserWithStats>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole__1>,
   'getFarmerOrders' : ActorMethod<[], Array<Order>>,
@@ -137,12 +157,18 @@ export interface _SERVICE {
   'getProductsByCategory' : ActorMethod<[ProductCategory], Array<Product>>,
   'getProductsByFarmer' : ActorMethod<[Principal], Array<Product>>,
   'getProfile' : ActorMethod<[], [] | [UserProfile]>,
+  'getRecentActivity' : ActorMethod<[], RecentActivity>,
+  'getTotalActiveUsers' : ActorMethod<[], bigint>,
+  'getTotalSuspendedUsers' : ActorMethod<[], bigint>,
   'getUserOrders' : ActorMethod<[], Array<Order>>,
   'getUserProfile' : ActorMethod<[Principal], UserProfile>,
+  'getUserStats' : ActorMethod<[Principal], UserStats>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'moderateProduct' : ActorMethod<[bigint, boolean], Product>,
+  'moderateProduct' : ActorMethod<[bigint, boolean, [] | [string]], Product>,
   'placeOrder' : ActorMethod<[Array<OrderItem>, Principal], Order>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'setSuspendedProfile' : ActorMethod<[Principal, boolean], undefined>,
+  'setUserRoleProfile' : ActorMethod<[Principal, UserRole], undefined>,
   'updateOrderStatus' : ActorMethod<[bigint, OrderStatus], undefined>,
   'updateProduct' : ActorMethod<
     [

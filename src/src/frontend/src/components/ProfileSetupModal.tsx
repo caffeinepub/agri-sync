@@ -34,6 +34,7 @@ export default function ProfileSetupModal() {
         location,
         role: role as UserRole,
         createdAt: BigInt(Date.now() * 1_000_000),
+        suspended: false,
       };
 
       await saveProfile.mutateAsync(profile);
